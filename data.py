@@ -1,34 +1,46 @@
 import numpy as np
 import cPickle as pickle
 
-#Return unpickled meta file
-def get_meta(folder,filename):
+class DataHandler:
 
-	meta_file = open(folder + '/' + filename,'r')
+	def __init__(self,batch_location,number_batches,mini_batch_size):
+		self.batch_location = batch_location
+		self.number_batches = number_batches
+		self.mini_batch_size = mini_batch_size
+		self.current_batch = 1
+		self.current_mini_batch = 0
 
-	_meta_ = pickle.load(meta_file)
+		with open(batch_location + '/batches.meta') as f:
+			self.meta = pickle.load(f)
 
-	meta_file.close()
+		self.num_mini_batches = meta['num_cases_per_batch'] / mini_batch_size
 
-	return _meta_
+		with open(batch_location + '/data_batch_' + str(self.current_batch)) as f:
+			self.current_batch_data = pickle.load(f)
 
-#Return batch data from batch file
-def get_batch(folder,batch_num,one_hot=False,num_labels=0):
-	data_file = open(folder+"/data_batch_" + str(batch_num),'r')
+	#Return meta data
+	def get_meta(self):
+		return self.meta
 
-	batch = pickle.load(data_file)
+	#Return batch data from batch file
+	def get_batch(self,folder,batch_num,one_hot=False,num_labels=0):
+		data_file = open(folder+"/data_batch_" + str(batch_num),'r')
 
-	data_file.close()
+		batch = pickle.load(data_file)
 
-	batch_data = batch['data']
-	batch_labels = np.array(batch['labels'])
+		data_file.close()
 
-	if one_hot:
-		oh = np.zeros(len(batch_labels),num_labels)
+		batch_data = batch['data']
+		batch_labels = np.array(batch['labels'])
 
-		oh[np.arange(len(batch_labels)),batch_labels] = 1
+		if one_hot:
+			oh = np.zeros(len(batch_labels),num_labels)
 
-		batch_labels = oh
+			oh[np.arange(len(batch_labels)),batch_labels] = 1
 
-	return batch_data, batch_labels
+			batch_labels = oh
 
+		return batch_data, batch_labels
+
+	def get_next_mini_batch(self):
+		pass
