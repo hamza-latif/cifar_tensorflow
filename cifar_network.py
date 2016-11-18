@@ -1,55 +1,45 @@
 import tensorflow as tf
 import numpy as np
 
-def weightVar(dim):
-	return tf.Variable(tf.random_normal(dim,stddev=0.1))
-
-def biasVar(dim,init_value=0.1):
-	return tf.Variable(tf.constant(init_value,shape=dim))
-
-def conv2dLayer(input,weights,stride,name='',padding='VALID'):
-	return tf.nn.conv2d(input,weights,strides=stride,padding=padding,name=name)
-
-def conv2dDepthwise(input,weights,stride,name='',padding='VALID'):
-	return tf.nn.depthwise_conv2d(input,weights,strides=stride,padding=padding,name=name)
-
-
 def conv_net(x):
-	w_conv1a = weightVar([2, 2, 4, 4])
-	b_conv1a = biasVar([16])#tf.Variable(tf.constant(0.1, shape=[16]))
-	conv_1a = conv2dDepthwise(x, w_conv1a, [1, 1, 1, 1], name='conv1')
+	w_conv1a = weightVar([5, 5, 3, 64])
+	b_conv1a = biasVar([3*64])#tf.Variable(tf.constant(0.1, shape=[16]))
+	conv_1a = conv2dDepthwise(x, w_conv1a, [1, 1, 1, 1], name='conv1a')
 
 	h_conv1a = tf.nn.relu(conv_1a + b_conv1a)
+
+	h_conv1a = tf.nn.local_response_normalization(maxPool(h_conv1a))
 	# h_conv1a = tf.nn.relu(tf.nn.depthwise_conv2d(x,W_conv1,strides=[1,1,1,1],padding='VALID',name='conv1') + b_conv1)
-	w_conv1b = weightVar([1, 1, 4, 8])
-	b_conv1b = biasVar([8])
-	conv_1b = conv2dLayer(x, w_conv1b, [1, 1, 1, 1], name='conv2')
+	w_conv1b = weightVar([5, 5, 3, 64])
+	b_conv1b = biasVar([64])
+	conv_1b = conv2dLayer(x, w_conv1b, [1, 1, 1, 1], name='conv1b')
 
 	h_conv1b = tf.nn.relu(conv_1b + b_conv1b)
+	h_conv1b = tf.nn.local_response_normalization(maxPool(h_conv1b))
 
-	w_fc1 = weightVar([2 * 2 * 4 * 4 + 3 * 3 * 8, 128])
-	b_fc1 = biasVar([128])
+	w_fc1 = weightVar([14 * 14 * 64 * 4, 1024])
+	b_fc1 = biasVar([1024])
 
-	h_conv1a_flat = tf.reshape(h_conv1a, [-1, 2 * 2 * 4 * 4])
-	h_conv1b_flat = tf.reshape(h_conv1b, [-1, 3 * 3 * 8])
+	h_conv1a_flat = tf.reshape(h_conv1a, [-1, 14 * 14 * 64 * 3])
+	h_conv1b_flat = tf.reshape(h_conv1b, [-1, 14 * 14 * 64])
 
 	h_conv1_flat = tf.concat(1, [h_conv1a_flat, h_conv1b_flat])
 	h_fc1 = tf.nn.relu(tf.matmul(h_conv1_flat, w_fc1) + b_fc1)
 
-	w_fc2 = weightVar([128, 128])
-	b_fc2 = biasVar([128])
+	w_fc2 = weightVar([1024, 1024])
+	b_fc2 = biasVar([1024])
 
 	h_fc2 = tf.nn.relu(tf.matmul(h_fc1, w_fc2) + b_fc2)
 
-	w_fc3 = weightVar([128, 6])
-	b_fc3 = biasVar([6])
+	w_fc3 = weightVar([1024, 10])
+	b_fc3 = biasVar([10])
 
 	output = tf.matmul(h_fc2, w_fc3) + b_fc3
 	return output
 
 def full_net(x):
 
-	input = tf.reshape(x, [-1,3*3*4])
+	input = tf.reshape(x, [-1,32*32*3])
 
 	w_fc1 = tf.Variable(tf.random_normal([3 * 3 * 4, 512], stddev=0.1))
 	b_fc1 = tf.Variable(tf.constant(0.1, shape=[512]))
