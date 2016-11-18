@@ -41,18 +41,18 @@ def full_net(x):
 
 	input = tf.reshape(x, [-1,32*32*3])
 
-	w_fc1 = tf.Variable(tf.random_normal([3 * 3 * 4, 512], stddev=0.1))
-	b_fc1 = tf.Variable(tf.constant(0.1, shape=[512]))
+	w_fc1 = tf.Variable(tf.random_normal([32 * 32 * 3, 1024], stddev=0.1))
+	b_fc1 = tf.Variable(tf.constant(0.1, shape=[1024]))
 
 	h_fc1 = tf.nn.relu(tf.matmul(input, w_fc1) + b_fc1)
 
-	w_fc2 = tf.Variable(tf.random_normal([512, 512], stddev=0.1))
-	b_fc2 = tf.Variable(tf.constant(0.1, shape=[512]))
+	w_fc2 = tf.Variable(tf.random_normal([1024, 1024], stddev=0.1))
+	b_fc2 = tf.Variable(tf.constant(0.1, shape=[1024]))
 
 	h_fc2 = tf.nn.relu(tf.matmul(h_fc1, w_fc2) + b_fc2)
 
-	w_fc3 = tf.Variable(tf.random_normal([512, 6], stddev=0.1))
-	b_fc3 = tf.Variable(tf.constant(0.1, shape=[6]))
+	w_fc3 = tf.Variable(tf.random_normal([1024, 10], stddev=0.1))
+	b_fc3 = tf.Variable(tf.constant(0.1, shape=[10]))
 
 	output = tf.matmul(h_fc2, w_fc3) + b_fc3
 	return output
@@ -60,8 +60,8 @@ def full_net(x):
 
 def train_nn(c_or_f):
 	batch_size = 500
-	x = tf.placeholder('float', [None, 3, 3, 4])
-	y = tf.placeholder('float', [None, 6])
+	x = tf.placeholder('float', [None, 32, 32, 3])
+	y = tf.placeholder('float', [None, 10])
 
 	train_data, train_labels = process_data('sat.trn')
 	test_data, test_labels = process_data('sat.tst')
