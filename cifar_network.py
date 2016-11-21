@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 from data import DataHandler
 from network_defs import *
+import time
 
 def conv_net(x):
 	w_conv1a = weightVar([5, 5, 3, 64])
@@ -89,6 +90,7 @@ def train_nn(c_or_f, data_handler):
 		hm_epochs = 5000
 		for epoch in range(hm_epochs):
 			epoch_loss = 0
+			start_time = time.time()
 			for i in range(int(ntrain / batch_size)):
 				# randindx = np.random.randint(ntrain, size=batch_size)
 				# batch_data = train_data[randindx, :]
@@ -99,7 +101,8 @@ def train_nn(c_or_f, data_handler):
 				_, c = sess.run([train_step, cost], feed_dict={x: batch_data, y: batch_labels})
 				epoch_loss += c
 				#print('Epoch', epoch + 1, ' : Minibatch', i+1, ' out of ', ntrain/batch_size, ' Loss: ', c)
-			print('Epoch', epoch + 1, 'completed out of', hm_epochs, 'loss:', epoch_loss)
+			duration = time.time() - start_time
+			print('Epoch', epoch + 1, 'completed out of', hm_epochs, 'loss:', epoch_loss, 'time:', duration)
 			if epoch % 10 == 0:
 				tc = 0
 				for i in range(ntest/data_handler.mini_batch_size):
