@@ -98,8 +98,8 @@ def train_nn(c_or_f, data_handler):
 				batch_data = batch_data.reshape([-1,32,32,3])
 				_, c = sess.run([train_step, cost], feed_dict={x: batch_data, y: batch_labels})
 				epoch_loss += c
-				print('Epoch', epoch + 1, ' : Minibatch', i+1, ' out of ', ntrain/batch_size, ' Loss: ', c)
-			print('Epoch', epoch + 1, 'completed out of', hm_epochs, 'loss:', epoch_loss)
+				#print('Epoch', epoch + 1, ' : Minibatch', i+1, ' out of ', ntrain/batch_size, ' Loss: ', c)
+			#print('Epoch', epoch + 1, 'completed out of', hm_epochs, 'loss:', epoch_loss)
 			if epoch % 100 == 0:
 				print('Accuracy:', accuracy.eval({x: test_data, y: test_labels}))
 		print('Accuracy:', accuracy.eval({x: test_data, y: test_labels}))
@@ -113,4 +113,4 @@ if __name__ == '__main__':
 
 	handler = DataHandler(bl,nb,mbs)
 
-	train_nn(1,handler)
+	train_nn(0,handler)
