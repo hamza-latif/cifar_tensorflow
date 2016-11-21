@@ -58,16 +58,17 @@ def full_net(x):
 	return output
 
 
-def train_nn(c_or_f):
-	batch_size = 500
+def train_nn(c_or_f, data_handler):
+
+	batch_size = data_handler.mini_batch_size
 	x = tf.placeholder('float', [None, 32, 32, 3])
 	y = tf.placeholder('float', [None, 10])
 
 	train_data, train_labels = process_data('sat.trn')
-	test_data, test_labels = process_data('sat.tst')
+	test_data, test_labels = data_handler.get_test_data()
 
-	ntrain = train_data.shape[0]
-	ntest = test_data.shape[0]
+	ntrain = data_handler.train_size
+	ntest = data_handler.meta['num_cases_per_batch']
 
 	# ntrain = len(train_data)
 	# ntest = len(test_data)
@@ -87,9 +88,10 @@ def train_nn(c_or_f):
 		for epoch in range(hm_epochs):
 			epoch_loss = 0
 			for _ in range(int(ntrain / batch_size)):
-				randindx = np.random.randint(ntrain, size=batch_size)
-				batch_data = train_data[randindx, :]
-				batch_labels = train_labels[randindx, :]
+				# randindx = np.random.randint(ntrain, size=batch_size)
+				# batch_data = train_data[randindx, :]
+				# batch_labels = train_labels[randindx, :]
+				batch_data, batch_labels = data_handler.get_next_mini_batch()
 				_, c = sess.run([train_step, cost], feed_dict={x: batch_data, y: batch_labels})
 				epoch_loss += c
 			print('Epoch', epoch + 1, 'completed out of', hm_epochs, 'loss:', epoch_loss)
@@ -97,5 +99,13 @@ def train_nn(c_or_f):
 				print('Accuracy:', accuracy.eval({x: test_data, y: test_labels}))
 		print('Accuracy:', accuracy.eval({x: test_data, y: test_labels}))
 
+if __name__ == '__main__':
+	import sys
 
-train_nn(1)
+	bl = sys.argv[1]
+	nb = int(sys.argv[2])
+	mbs = int(sys.argv[3])
+
+	handler = DataHandler(bl,nb,mbs)
+
+	train_nn(1,handler)

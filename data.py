@@ -14,9 +14,13 @@ class DataHandler:
 		with open(batch_location + '/batches.meta') as f:
 			self.meta = pickle.load(f)
 
+		self.train_size = self.meta['num_cases_per_batch']*self.number_batches
+
 		self.num_mini_batches = self.meta['num_cases_per_batch'] / mini_batch_size
 
 		self.num_labels = len(self.meta['label_names'])
+
+		self.init_test_data()
 
 	#Return meta data
 	def get_meta(self):
@@ -82,6 +86,23 @@ class DataHandler:
 		self.current_mini_batch = self.current_mini_batch + 1
 
 		return mini_batch_data, mini_batch_labels
+
+	def init_test_data(self):
+		with open(self.batch_location + '/test_batch') as f:
+			self.test_batch_data = pickle.load(f)
+
+		self.test_data = self.test_batch_data['data']
+		self.test_labels = np.array(self.test_batch_data['labels'])
+
+		if self.one_hot:
+			oh = np.zeros((len(self.test_labels),self.num_labels))
+
+			oh[np.arange(len(self.test_labels)),self.test_labels] = 1
+
+			self.test_labels = oh
+
+	def get_test_data(self):
+		return self.test_data, self.test_labels
 
 def test(batch_location,number_batches,mini_batch_size,one_hot=True):
 	tester = DataHandler(batch_location,number_batches,mini_batch_size,one_hot)
