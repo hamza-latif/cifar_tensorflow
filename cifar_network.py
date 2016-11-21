@@ -66,8 +66,8 @@ def train_nn(c_or_f, data_handler):
 	x = tf.placeholder('float', [None, 32, 32, 3])
 	y = tf.placeholder('float', [None, 10])
 
-	test_data, test_labels = data_handler.get_test_data()
-	test_data = test_data.reshape([-1,32,32,3])
+	#test_data, test_labels = data_handler.get_test_data()
+	#test_data = test_data.reshape([-1,32,32,3])
 
 	ntrain = data_handler.train_size
 	ntest = data_handler.meta['num_cases_per_batch']
@@ -94,15 +94,25 @@ def train_nn(c_or_f, data_handler):
 				# batch_data = train_data[randindx, :]
 				# batch_labels = train_labels[randindx, :]
 				batch_data, batch_labels = data_handler.get_next_mini_batch()
-				print('batch_data_size', len(batch_data))
+				#print('batch_data_size', len(batch_data))
 				batch_data = batch_data.reshape([-1,32,32,3])
 				_, c = sess.run([train_step, cost], feed_dict={x: batch_data, y: batch_labels})
 				epoch_loss += c
 				#print('Epoch', epoch + 1, ' : Minibatch', i+1, ' out of ', ntrain/batch_size, ' Loss: ', c)
-			#print('Epoch', epoch + 1, 'completed out of', hm_epochs, 'loss:', epoch_loss)
+			print('Epoch', epoch + 1, 'completed out of', hm_epochs, 'loss:', epoch_loss)
 			if epoch % 100 == 0:
-				print('Accuracy:', accuracy.eval({x: test_data, y: test_labels}))
-		print('Accuracy:', accuracy.eval({x: test_data, y: test_labels}))
+				tc = 0
+				for i in range(ntest/data_handler.mini_batch_size):
+					test_data, test_labels = data_handler.get_next_mini_test_batch()
+					test_data = test_data.reshape([-1, 32, 32, 3])
+					tc += accuracy.eval({x: test_data, y: test_labels})
+				print('Accuracy:', tc/(ntest/data_handler.mini_batch_size))
+		tc = 0
+		for i in range(ntest / data_handler.mini_batch_size):
+			test_data, test_labels = data_handler.get_next_mini_test_batch()
+			test_data = test_data.reshape([-1, 32, 32, 3])
+			tc += accuracy.eval({x: test_data, y: test_labels})
+		print('Accuracy:', tc / (ntest / data_handler.mini_batch_size))
 
 if __name__ == '__main__':
 	import sys

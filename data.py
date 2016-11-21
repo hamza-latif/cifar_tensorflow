@@ -93,6 +93,7 @@ class DataHandler:
 
 		self.test_data = self.test_batch_data['data']
 		self.test_labels = np.array(self.test_batch_data['labels'])
+		self.test_batch = 0
 
 		if self.one_hot:
 			oh = np.zeros((len(self.test_labels),self.num_labels))
@@ -103,6 +104,16 @@ class DataHandler:
 
 	def get_test_data(self):
 		return self.test_data, self.test_labels
+
+	def get_next_mini_test_batch(self):
+		start = self.mini_batch_size*self.test_batch
+		end = start + self.mini_batch_size
+		mini_batch_data = self.test_data[start:end]
+		mini_batch_labels = self.test_labels[start:end]
+
+		self.test_batch = (self.test_batch + 1) % self.num_mini_batches
+
+		return mini_batch_data, mini_batch_labels
 
 def test(batch_location,number_batches,mini_batch_size,one_hot=True):
 	tester = DataHandler(batch_location,number_batches,mini_batch_size,one_hot)
