@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from data import DataHandler
+from network_defs import *
 
 def conv_net(x):
 	w_conv1a = weightVar([5, 5, 3, 64])
@@ -66,6 +67,7 @@ def train_nn(c_or_f, data_handler):
 	y = tf.placeholder('float', [None, 10])
 
 	test_data, test_labels = data_handler.get_test_data()
+	test_data = test_data.reshape([-1,32,32,3])
 
 	ntrain = data_handler.train_size
 	ntest = data_handler.meta['num_cases_per_batch']
@@ -92,14 +94,15 @@ def train_nn(c_or_f, data_handler):
 				# batch_data = train_data[randindx, :]
 				# batch_labels = train_labels[randindx, :]
 				batch_data, batch_labels = data_handler.get_next_mini_batch()
+				print('batch_data_size', len(batch_data))
 				batch_data = batch_data.reshape([-1,32,32,3])
 				_, c = sess.run([train_step, cost], feed_dict={x: batch_data, y: batch_labels})
 				epoch_loss += c
-				print('Epoch', epoch + 1, ' : Minibatch', i+1, ' out of ', ntrain/batch_size)
+				print('Epoch', epoch + 1, ' : Minibatch', i+1, ' out of ', ntrain/batch_size, ' Loss: ', c)
 			print('Epoch', epoch + 1, 'completed out of', hm_epochs, 'loss:', epoch_loss)
 			if epoch % 100 == 0:
-				print('Accuracy:', accuracy.eval({x: test_data.reshape[-1,32,32,3], y: test_labels}))
-		print('Accuracy:', accuracy.eval({x: test_data.reshape([-1,32,32,3]), y: test_labels}))
+				print('Accuracy:', accuracy.eval({x: test_data, y: test_labels}))
+		print('Accuracy:', accuracy.eval({x: test_data, y: test_labels}))
 
 if __name__ == '__main__':
 	import sys

@@ -83,7 +83,7 @@ class DataHandler:
 		mini_batch_data = self.batch_data[start:end]
 		mini_batch_labels = self.batch_labels[start:end]
 
-		self.current_mini_batch = self.current_mini_batch + 1
+		self.current_mini_batch = (self.current_mini_batch + 1) % self.num_mini_batches
 
 		return mini_batch_data, mini_batch_labels
 
