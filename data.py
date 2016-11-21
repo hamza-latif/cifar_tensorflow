@@ -9,6 +9,7 @@ class DataHandler:
 		self.mini_batch_size = mini_batch_size
 		self.current_batch = number_batches
 		self.current_mini_batch = 0
+		self.one_hot = one_hot
 
 		with open(batch_location + '/batches.meta') as f:
 			self.meta = pickle.load(f)
@@ -51,10 +52,10 @@ class DataHandler:
 			self.current_batch_data = pickle.load(f)
 
 		self.batch_data = self.current_batch_data['data']
-		self.batch_labels = np.array(batch['labels'])
+		self.batch_labels = np.array(self.current_batch_data['labels'])
 
-		if one_hot:
-			oh = np.zeros(len(self.batch_labels),self.num_labels)
+		if self.one_hot:
+			oh = np.zeros((len(self.batch_labels),self.num_labels))
 
 			oh[np.arange(len(self.batch_labels)),self.batch_labels] = 1
 
@@ -73,7 +74,7 @@ class DataHandler:
 			self.next_batch()
 			self.shuffle_batch()
 
-		start = self.mini_batch_size*self.current_batch_data
+		start = self.mini_batch_size*self.current_mini_batch
 		end = start + self.mini_batch_size
 		mini_batch_data = self.batch_data[start:end]
 		mini_batch_labels = self.batch_labels[start:end]
@@ -82,3 +83,17 @@ class DataHandler:
 
 		return mini_batch_data, mini_batch_labels
 
+def test(batch_location,number_batches,mini_batch_size,one_hot=True):
+	tester = DataHandler(batch_location,number_batches,mini_batch_size,one_hot)
+
+	d,l = tester.get_next_mini_batch()
+
+	print d
+	print l
+
+if __name__ == '__main__':
+	import sys
+	bl = sys.argv[1]
+	nb = int(sys.argv[2])
+	mbs = int(sys.argv[3])
+	test(bl,nb,mbs)
