@@ -100,7 +100,7 @@ def train_nn(c_or_f, data_handler):
 				epoch_loss += c
 				#print('Epoch', epoch + 1, ' : Minibatch', i+1, ' out of ', ntrain/batch_size, ' Loss: ', c)
 			print('Epoch', epoch + 1, 'completed out of', hm_epochs, 'loss:', epoch_loss)
-			if epoch % 100 == 0:
+			if epoch % 10 == 0:
 				tc = 0
 				for i in range(ntest/data_handler.mini_batch_size):
 					test_data, test_labels = data_handler.get_next_mini_test_batch()
