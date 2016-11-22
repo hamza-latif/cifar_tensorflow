@@ -122,8 +122,8 @@ def train_nn(c_or_f, data_handler):
 	else:
 		prediction = full_net(x)
 	cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(prediction, y))
-	train_step = tf.train.AdamOptimizer().minimize(cost)
-	#train_step = tf.train.GradientDescentOptimizer(0.0001).minimize(cost)
+	#train_step = tf.train.AdamOptimizer().minimize(cost)
+	train_step = tf.train.GradientDescentOptimizer(0.001).minimize(cost)
 	#train_step = tf.train.MomentumOptimizer(.0001,.00001).minimize(cost)
 	correct_prediction = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
 	accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
