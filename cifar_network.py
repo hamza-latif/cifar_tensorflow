@@ -67,39 +67,42 @@ def conv_net2(x):
 	conv1 = conv2dLayer(x,w_conv1,[1,1,1,1],name='conv1')
 
 	h_conv1 = tf.nn.relu(conv1+b_conv1)
-
 	pool1 = maxPool(h_conv1)
+	h_conv1_norm = tf.nn.local_response_normalization(pool1)
 
 	w_conv2 = weightVar([3,3,64,32])
 	b_conv2 = biasVar([32])
 
-	conv2 = conv2dLayer(pool1,w_conv2,[1,1,1,1],name='conv2',padding='SAME')
+	conv2 = conv2dLayer(h_conv1_norm,w_conv2,[1,1,1,1],name='conv2',padding='SAME')
 
 	h_conv2 = tf.nn.relu(conv2 + b_conv2)
 
 	pool2 = maxPool(h_conv2)
+	h_conv2_norm = tf.nn.local_response_normalization(pool2)
 
-	pool2_flat = tf.reshape(pool2,[-1,7*7*32])
+	h_conv2_flat = tf.reshape(h_conv2_norm,[-1,7*7*32])
 
 	w_fc1 = weightVar([7*7*32,1024])
 	b_fc1 = biasVar([1024])
 
-	h_fc1 = tf.nn.relu(tf.matmul(w_fc1,pool2_flat) + b_fc1)
+	h_fc1 = tf.nn.relu(tf.matmul(h_conv2_flat,w_fc1) + b_fc1)
 
 	w_fc2 = weightVar([1024, 1024])
 	b_fc2 = biasVar([1024])
 
-	h_fc2 = tf.nn.relu(tf.matmul(w_fc2, h_fc1) + b_fc2)
+	h_fc2 = tf.nn.relu(tf.matmul(h_fc1,w_fc2) + b_fc2)
 
 	w_fc3 = weightVar([1024, 10])
 	b_fc3 = biasVar([10])
 
-	h_fc3 = tf.matmul(w_fc3, h_fc2) + b_fc3
+	h_fc3 = tf.matmul(h_fc2,w_fc3) + b_fc3
 
 	return h_fc3
 
 
 def train_nn(c_or_f, data_handler):
+
+	gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
 
 	batch_size = data_handler.mini_batch_size
 	x = tf.placeholder('float', [None, 32, 32, 3])
@@ -115,16 +118,17 @@ def train_nn(c_or_f, data_handler):
 	# ntest = len(test_data)
 
 	if c_or_f == 0:
-		prediction = conv_net(x)
+		prediction = conv_net2(x)
 	else:
 		prediction = full_net(x)
 	cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(prediction, y))
-	#train_step = tf.train.AdamOptimizer().minimize(cost)
-	train_step = tf.train.GradientDescentOptimizer(0.001).minimize(cost)
+	train_step = tf.train.AdamOptimizer().minimize(cost)
+	#train_step = tf.train.GradientDescentOptimizer(0.0001).minimize(cost)
+	#train_step = tf.train.MomentumOptimizer(.0001,.00001).minimize(cost)
 	correct_prediction = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
 	accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
 
-	with tf.Session() as sess:
+	with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
 		sess.run(tf.initialize_all_variables())
 		hm_epochs = 5000
 		for epoch in range(hm_epochs):
