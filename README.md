@@ -2,3 +2,5 @@
 CIFAR 10 Tensorflow
 
 My project to try out tensorflow.
+
+Requires tensorflow and tflearn.
