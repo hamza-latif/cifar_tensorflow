@@ -1,8 +1,10 @@
 import tensorflow as tf
+import tflearn
 import numpy as np
 from data import DataHandler
 from network_defs import *
 import time
+import os
 
 def conv_net(x):
 	w_conv1a = weightVar([5, 5, 3, 64])
@@ -99,6 +101,28 @@ def conv_net2(x):
 
 	return h_fc3
 
+def tflearn_convnet(x):
+	conv1 = tflearn.conv_2d(x,64,5,activation='relu',name='conv1')
+
+	pool1 = tflearn.max_pool_2d(conv1,2,name='pool1')
+
+	norm1 = tflearn.local_response_normalization(pool1,name='norm1')
+
+	conv2 = tflearn.conv_2d(norm1,32,3,activation='relu',name='conv2')
+
+	pool2 = tflearn.max_pool_2d(conv2,2,name='pool2')
+
+	norm2 = tflearn.local_response_normalization(pool2,name='norm2')
+
+	flat = tflearn.flatten(norm2)
+
+	fc1 = tflearn.fully_connected(flat,1024,activation='relu',name='fc1')
+
+	fc2 = tflearn.fully_connected(fc1,1024,activation='relu',name='fc2')
+
+	fc3 = tflearn.fully_connected(fc2,10,name='fc3')
+
+	return fc3
 
 def train_nn(c_or_f, data_handler):
 
@@ -123,10 +147,15 @@ def train_nn(c_or_f, data_handler):
 		prediction = full_net(x)
 	cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(prediction, y))
 	#train_step = tf.train.AdamOptimizer().minimize(cost)
-	train_step = tf.train.GradientDescentOptimizer(0.001).minimize(cost)
-	#train_step = tf.train.MomentumOptimizer(.0001,.00001).minimize(cost)
+	#train_step = tf.train.GradientDescentOptimizer(0.001).minimize(cost)
+	train_step = tf.train.MomentumOptimizer(.001,.0001).minimize(cost)
 	correct_prediction = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
 	accuracy = tf.reduce_mean(tf.cast(correct_prediction, 'float'))
+
+	saver = tf.train.Saver()
+
+	if not os.path.isdir("/tmp/cifar"):
+		os.mkdir("/tmp/cifar")
 
 	with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
 		sess.run(tf.initialize_all_variables())
@@ -153,6 +182,9 @@ def train_nn(c_or_f, data_handler):
 					test_data = test_data.reshape([-1, 32, 32, 3])
 					tc += accuracy.eval({x: test_data, y: test_labels})
 				print('Accuracy:', tc/(ntest/data_handler.mini_batch_size))
+
+			if epoch % 50 == 0:
+				save_path = saver.save(sess,"/tmp/cifar/model_epoch" + str(epoch) + ".ckpt")
 		tc = 0
 		for i in range(ntest / data_handler.mini_batch_size):
 			test_data, test_labels = data_handler.get_next_mini_test_batch()
