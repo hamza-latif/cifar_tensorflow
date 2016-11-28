@@ -48,6 +48,8 @@ def resnet1(x, n = 5):
 	# Regression
 	net = tflearn.fully_connected(net, 10, activation='softmax')
 
+	return net
+
 def train_nn_tflearn(data_handler,num_epochs=50):
 
 	gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
@@ -61,6 +63,7 @@ def train_nn_tflearn(data_handler,num_epochs=50):
 	img_aug = tflearn.ImageAugmentation()
 	img_aug.add_random_flip_leftright()
 	img_aug.add_random_rotation(max_angle=25)
+	img_aug.add_random_crop([32,32], padding=4)
 
 	x = tflearn.input_data(shape=[None, 32, 32, 3], dtype='float', data_preprocessing=img_prep,
 						   data_augmentation=img_aug)
