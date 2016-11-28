@@ -6,6 +6,8 @@ from network_defs import *
 import time
 import os
 
+tf.python.control_flow_ops = tf
+
 
 def example_net(x):
 	network = tflearn.conv_2d(x, 32, 3, activation='relu')
@@ -23,17 +25,30 @@ def example_net(x):
 def trythisnet(x):
 	network = tflearn.conv_2d(x,64,5,activation='relu')
 	network = tflearn.max_pool_2d(network,3,2)
-	#network = tflearn.local_response_normalization(network,4,alpha=0.001/9.0)
+	network = tflearn.local_response_normalization(network,4,alpha=0.001/9.0)
 	network = tflearn.conv_2d(network,64,5,activation='relu')
-	#network = tflearn.local_response_normalization(network,4,alpha=0.001/9.0)
+	network = tflearn.local_response_normalization(network,4,alpha=0.001/9.0)
 	network = tflearn.max_pool_2d(network,3,2)
 	network = tflearn.fully_connected(network,384,activation='relu',weight_decay=0.004)
 	network = tflearn.fully_connected(network,192,activation='relu',weight_decay=0.004)
-	network = tflearn.fully_connected(network,10,activation='linear',weight_decay=0.0)
+	network = tflearn.fully_connected(network,10,activation='softmax',weight_decay=0.0)
 
 	return network
 
-def train_nn_tflearn(data_handler):
+def resnet1(x, n = 5):
+	net = tflearn.conv_2d(x, 16, 3, regularizer='L2', weight_decay=0.0001)
+	net = tflearn.residual_block(net, n, 16)
+	net = tflearn.residual_block(net, 1, 32, downsample=True)
+	net = tflearn.residual_block(net, n - 1, 32)
+	net = tflearn.residual_block(net, 1, 64, downsample=True)
+	net = tflearn.residual_block(net, n - 1, 64)
+	net = tflearn.batch_normalization(net)
+	net = tflearn.activation(net, 'relu')
+	net = tflearn.global_avg_pool(net)
+	# Regression
+	net = tflearn.fully_connected(net, 10, activation='softmax')
+
+def train_nn_tflearn(data_handler,num_epochs=50):
 
 	gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
 
@@ -85,7 +100,8 @@ def train_nn_tflearn(data_handler):
 	X_test = X_test.reshape([-1,32,32,3])
 
 	#network = tflearn.regression(net3(x),optimizer='adam',loss='categorical_crossentropy',learning_rate=0.001)
-	network = tflearn.regression(trythisnet(x),optimizer='sgd',loss='categorical_crossentropy',learning_rate=0.001)
+	mom = tflearn.Momentum(0.1, lr_decay=0.1, decay_step=32000, staircase=True)
+	network = tflearn.regression(resnet1(x),optimizer=mom,loss='categorical_crossentropy')
 
 	print np.shape(X)
 	print np.shape(Y)
@@ -101,7 +117,8 @@ if __name__ == '__main__':
 	bl = sys.argv[1]
 	nb = int(sys.argv[2])
 	mbs = int(sys.argv[3])
+	nep = int(sys.argv[4])
 
 	handler = DataHandler(bl,nb,mbs)
 	#train_nn(0,handler)
-	train_nn_tflearn(handler)
+	train_nn_tflearn(handler,nep)
