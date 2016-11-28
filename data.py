@@ -115,6 +115,18 @@ class DataHandler:
 
 		return mini_batch_data, mini_batch_labels
 
+	def get_all_train_data(self):
+		train_x = np.zeros([0,3072])
+		train_y = []
+
+		for i in range(self.number_batches):
+			with open(self.batch_location + '/data_batch_' + str(i+1)) as df:
+				data = pickle.load(df)
+				train_x = np.concatenate((train_x,data['data']))
+				train_y = train_y + data['labels']
+
+		return train_x, train_y
+
 def test(batch_location,number_batches,mini_batch_size,one_hot=True):
 	tester = DataHandler(batch_location,number_batches,mini_batch_size,one_hot)
 
